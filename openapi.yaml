@@ -1,0 +1,119 @@
+swagger: '2.0'
+info:
+  description: ''
+  version: 1.0.0
+  title: SureMDM
+host: suremdm.42gears.com
+basePath: /api
+schemes:
+  - http
+  - https
+paths:
+  '/group/{GroupId}':
+    get:
+      tags:
+        - Group
+      summary: Gets the details of a group (Since Version 1.0)
+      description: 'This API gets the details like totalDevices, Subgroups, Online and Offline devices in group specified by groupID.'
+      operationId: ''
+      parameters:
+        - name: GroupId
+          in: path
+          description: Id of group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/GroupGetModel'
+        '404':
+          description: Not Found
+  /group:
+    get:
+      tags:
+        - Group
+      summary: Gets the list of groups accessible to the user (Since Version 1.3).
+      description: Gets the list of groups accessible to the user.
+      operationId: ''
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/GroupGetModel'
+    post:
+      tags:
+        - Group
+      summary: Creates a new group or subgroup. (Since Version 1.2)
+      description: This API is used to create a new group or subgroup.
+      operationId: ''
+      parameters:
+        - in: body
+          name: body
+          description: List of group parameters
+          required: true
+          schema:
+            $ref: '#/definitions/GroupModel'
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/GroupPostOutputModel'
+definitions:
+  GroupModel:
+    type: object
+    properties:
+      GroupId:
+        type: string
+        description: Id of group.
+        example: 0f576c39-aa0b-437c-b1f0-befc362dd2cf
+      GroupName:
+        type: string
+        description: name of group.
+        example: Test
+  GroupGetModel:
+    type: object
+    properties:
+      Groups:
+        type: string
+        description: Id of group
+        example:
+          - ParentGroupID: null
+            DefaultJobsCount: 0
+            GroupName: New
+            GroupID: 0f576c39-aa0b-437c-b1f0-befc362dd2cf
+      TotalDevices:
+        type: string
+        description: total device in group
+        example: 1
+      TotalSubgroups:
+        type: string
+        description: total sub-groups
+        example: 0
+      Devices:
+        type: string
+        description: device in group
+        example: 1
+      Online:
+        type: string
+        description: device in group is online
+        example: 0
+      Offline:
+        type: string
+        description: device in group is offline
+        example: 1
+      TotalDevicesExcludingSubGroups:
+        type: string
+        description: total device excluding sub-groups
+        example: 0
+  GroupPostOutputModel:
+    type: object
+    properties:
+      GroupId:
+        type: string
+        description: Returns GroupId.
+        example: 8afc87ba-d797-4de4-85b0-8971db41a94d
