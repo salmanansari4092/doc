@@ -1,119 +1,2493 @@
-swagger: '2.0'
+openapi: 3.0.0
 info:
-  description: ''
+  description: >
+    # Introduction
+      The SureMDM API enables you to interact with SureMDM server programmatically. You can use this API to integrate within your existing application to perform actions or retrieve data to build your own dashboard or use in some other kind of business use case. This page has required details available, including HTTP response codes, request format and error codes.
+    # Get your API Key
+      Every REST request made to SureMDM through available API needs ApiKey for Authentication and same can be requested through contacting your Account Manager from 42Gears team.
+    # Authentication
+      Every request must contain a Basic Authentication HTTP Header along with an ApiKey, below is the sample code:
+
+          {
+            using (var client = new HttpClient())
+            {
+              client.BaseAddress = new Uri("https://suremdm.42gears.com/api");
+              client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", 
+              Convert.ToBase64String(Encoding.ASCII.GetBytes(String.Format("{0}:{1}", username, password))));
+              client.DefaultRequestHeaders.TryAddWithoutValidation("ApiKey", ApiKey);
+              // your code goes here
+            }
+          }
   version: 1.0.0
   title: SureMDM
-host: suremdm.42gears.com
-basePath: /api
-schemes:
-  - http
-  - https
+  x-logo:
+    url: 'http://192.168.1.118:9090/logo.png'
+    altText: Petstore logo
+  tags:
+  - name: Device
+    description: Everything about Device
+  - name: Dymanic Job
+    description: Everything about Dynamic Jobs
+  - name: Job
+    description: Everything about Static Jobs
 paths:
-  '/group/{GroupId}':
+  /device:
+    get:
+      tags:
+        - Device
+      summary: Get device details
+      description: "Get device details by DeviceName, MACAddress or GroupID where device is assigned. "
+      parameters:
+        - name: DeviceName
+          in: query
+          description: Name of device.
+          schema:
+            type: string
+        - name: MACAddress
+          in: query
+          description: MAC address.
+          schema:
+            type: string
+        - name: ID of group.
+          in: query
+          description: ID of Group (For home group, GroupID stands 'null')
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceModel"
+    put:
+      tags:
+        - Device
+      summary: Delete Device
+      description: Delete Device from system.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteDevice"
+        description: List of parameters
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                type: string
+                example: |
+                  "true"
+                description: True/False for Success/Failure
+  /device/{id}:
+    get:
+      tags:
+        - Device
+      summary: Get device by ID
+      description: Get details of particular device specified by DeviceID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of device.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceModel"
+        "404":
+          description: Not Found
+  
+  /devicename:
+    get:
+      tags:
+        - Device
+      summary: Get Device Name 
+      description: "Get Name of particular device specified by DeviceID"
+      parameters:
+        - in: query
+          name: DeviceID
+          description: List of Device parameters
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                example: Client0026
+    put:
+      tags:
+        - Device
+      summary: Set Device Name 
+      description: Set name of device specified by DeviceId.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetDeviceName"
+        description: List of job parameters
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                example: true 
+  /deviceapproval:
+    get:
+      tags:
+        - Device
+      summary: Approve Device(s)
+      description: Approve unapproved device(s).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                description: approved device count
+                items:
+                 type: string
+                example: ["Approved Device Count : 1"]
+  /deviceassignment:
+    put:
+      tags:
+        - Device
+      summary: Assign Devices to a Group
+      description: Assign device to a particular group.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceAssignment"
+        description: List of job parameters
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                example: true
+  /devicelog/{DeviceId}:
+    get:
+      tags:
+        - Device
+      summary: Device Logs
+      description: Get log details of perticular device specified by DeviceId.
+      parameters:
+        - name: DeviceId
+          in: path
+          description: |
+            Id of device.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceLogOutput"
+  /datausagepolicy/{DeviceID}/{StartDate}/{EndDate}:
+    get:
+      tags:
+        - Device
+      summary: Device Data Usage
+      description: "Get total data-usage info of particular device apecified by DeviceId.<br/>
+        <b>Sample: </b>/DataUsagePolicy/8a14faf3-a26b-4ffb-aa52-f60c792d452b/2019-03-01/2019-03-07"
+      parameters:
+        - name: DeviceID
+          in: path
+          description: ID of target device
+          required: true
+          schema:
+            type: string
+        - name: StartDate
+          in: path
+          description: Start Date (YYYY-MM-DD)
+          required: true
+          schema:
+            type: string
+        - name: EndDate
+          in: path
+          description: End Date (YYYY-MM-DD)
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataUsageOutput"
+  /jobassignment:
+    post:
+      tags:
+        - Device
+      summary: Apply Job on Device
+      description: Assign job to particular device specified by DeviceId.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/Immediate'
+                - $ref: '#/components/schemas/Periodically'
+                - $ref: '#/components/schemas/Days_Time'
+                - $ref: '#/components/schemas/Date_Time'
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "true"
+                description: |
+                  true: success
+                  false: fail
+  /dynamicjobqueue:
+    post:
+      tags:
+        - Device
+      summary: Dynamicjob Deployment Status of Device
+      description: Get dynamicjob deployment status of device(s) specified by DeviceId.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DynamicJobQueueDevice"
+        description: List of job parameters
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  JobID:
+                    type: string
+                    description: ID of job.
+                    example: ffea8e48-c1df-4548-94f4-e02cdd1e224b
+                  DateTime:
+                    type: string
+                    description: Date and time when job was applied.
+                    example: 4/4/2019 7:16:59 AM
+                  Type:
+                    type: string
+                    description: Type of job.
+                    example: GetDeviceInfo
+                  Status:
+                    type: string
+                    description: Job status.
+                    example: "2"
+                  DynamicJobComments:
+                    type: string
+                    description: Detailed info about job.
+                    example: >
+                      [4/4/2019 7:17:30 AM (UTC)] Job deployed successfully on
+                      device.
+                  TimeOut:
+                    type: string
+                    description: Date and time when job timeout.
+                    example: 4/4/2019 7:17:59 AM
+                  DeviceIdDynamicJobQueue:
+                    type: string
+                    description: ID of device on which job is/was applied.
+                    example: 3167f5e3-4ac5-41c1-823c-714374edbdb4
+  /jobqueue:
+    post:
+      tags:
+        - Device
+      summary: Job Deployment Status of Device
+      description: Get job deployment status of device(s) specified by DeviceId.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobQueueDevice"
+        description: List of job parameters
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  JobID:
+                    type: string
+                    description: ID of job.
+                    example: ffea8e48-c1df-4548-94f4-e02cdd1e224b
+                  JobName:
+                    type: string
+                    description: Name of job.
+                    example: test
+                  Time:
+                    type: string
+                    description: Date and time when job was applied.
+                    example: 4/4/2019 7:16:59 AM
+                  Size:
+                    type: string
+                    description: Size of job.(in kb)
+                    example: "111534"
+                  Type:
+                    type: string
+                    description: Type of job.
+                    example: File Transfer
+                  Status:
+                    type: string
+                    description: |
+                      Job status.<br/>
+                      DEPLOYED / SCHEDULED
+                    example: SCHEDULED
+                  RowId:
+                    type: string
+                    description: ""
+                    example: DCFBBBEE-C043-426F-ACCF-212925BFD4BD
+                  Success:
+                    type: string
+                    description: Is job was success fully applied.
+                    example: "1"
+                  JobComments:
+                    type: string
+                    description: Detailed info about job.
+                    example: |
+                      [4/2/2019 11:17:12 AM (UTC)] Job pending to be applied.
+                  NetworkType:
+                    type: string
+                    description: Type of network to use for applying job.
+                    example: "2"
+                  DeviceIdJobQueue:
+                    type: string
+                    description: ID of device on which job is/was applied.
+                    example: 8a14faf3-a26b-4ffb-aa52-f60c792d452b
+
+  /group:
     get:
       tags:
         - Group
-      summary: Gets the details of a group (Since Version 1.0)
-      description: 'This API gets the details like totalDevices, Subgroups, Online and Offline devices in group specified by groupID.'
-      operationId: ''
+      summary: Get Home Group Details
+      description: Get the list of groups under Home group.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupGetModel"
+  
+  /group/{GroupId}:
+    get:
+      tags:
+        - Group
+      summary: Get Group Details by ID
+      description: Get details like totalDevices, Subgroups, Online and Offline devices in group specified by GroupID.
       parameters:
         - name: GroupId
           in: path
           description: Id of group
           required: true
-          type: string
-      responses:
-        '200':
-          description: OK
           schema:
-            $ref: '#/definitions/GroupGetModel'
-        '404':
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupGetModel"
+        "404":
           description: Not Found
-  /group:
-    get:
-      tags:
-        - Group
-      summary: Gets the list of groups accessible to the user (Since Version 1.3).
-      description: Gets the list of groups accessible to the user.
-      operationId: ''
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      responses:
-        '200':
-          description: OK
-          schema:
-            $ref: '#/definitions/GroupGetModel'
+  
     post:
       tags:
         - Group
-      summary: Creates a new group or subgroup. (Since Version 1.2)
+      summary: Create New Group
       description: This API is used to create a new group or subgroup.
-      operationId: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupModel"
+        description: List of group parameters
+        required: true
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupPostOutputModel"
+  
+  /dynamicjob:
+    post:
+      tags:
+        - Dymanic Job
+      summary: "Apply Dynamic Job "
+      description: >
+        Apply dynamic job to particular device specified by DeviceID.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/LockDevice'
+                - $ref: '#/components/schemas/RebootDevice'
+                - $ref: '#/components/schemas/RefreshDevice'
+                - $ref: '#/components/schemas/GetDeviceApps'
+                - $ref: '#/components/schemas/Wipe'
+                - $ref: '#/components/schemas/Buzz'
+                - $ref: '#/components/schemas/ChangePin'
+                - $ref: '#/components/schemas/CallTracking'
+                - $ref: '#/components/schemas/SMSTracking'
+                
+                
+
+                
+        description: List of Dynamicjobs
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Status
+                example: Queued
+  /job:
+    get:
+      tags:
+        - Job
+      summary: Get all jobs.
+      description: Get all the jobs from particular job folder.
       parameters:
-        - in: body
-          name: body
-          description: List of group parameters
+        - in: query
+          name: FolderId
+          description: Id of job folder.(pass null for default folder)
           required: true
           schema:
-            $ref: '#/definitions/GroupModel'
+            type: string
       responses:
-        '200':
-          description: Ok
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobOutputModel"
+    delete:
+      tags:
+        - Job
+      summary: Delete Job Details.
+      description: Delete job specified by JobID.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobDeleteModel"
+        description: List of delete job parameters
+        required: true
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Message:
+                    type: string
+                    description: Message.
+                    example: ""
+                  Data:
+                    type: string
+                    description: Data returned.
+                    example: ""
+                  Result:
+                    type: boolean
+                    description: Result.
+                    example: true
+    post:
+      tags:
+        - Job
+      summary: Create Jobs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/FileTransferJob'
+                - $ref: '#/components/schemas/InstallJob'
+                - $ref: '#/components/schemas/WiFiConfigJob'
+                - $ref: '#/components/schemas/NotificationPolicyJob'
+                - $ref: '#/components/schemas/DeviceMigrationJob'
+                - $ref: '#/components/schemas/SMSTrackingJob'
+                - $ref: '#/components/schemas/CallTrackingJob'
+                - $ref: '#/components/schemas/AppSettingsJob'
+                - $ref: '#/components/schemas/RemoteWipeJob'
+                - $ref: '#/components/schemas/TextMessageJob'
+                - $ref: '#/components/schemas/LocationTrackingJob'
+        description: List of Jobs
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                example: >
+                  "8e7bdfe5-5c7d-4e0c-a808-1226c2259efc,677a8efc-2cf4-47ea-a935-bd586ec1233e"
+                description: JobId and Job FolderId separated by comma(,).
+  /message:
+    get:
+      tags:
+        - Message
+      summary: Fetch Unread Messages.
+      description: Get unread messages sent by devices to Administrator.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageModel"
+        "404":
+          description: Not Found
+
+    delete:
+        tags:
+          - Message
+        summary: Delete Message
+        description: Delete particular message specified by messageId.
+        parameters:
+          - name: messageId
+            in: path
+            description: ID of message.
+            required: true
+            schema:
+              type: string
+        responses:
+          "200":
+            description: OK
+            content:
+              application/json:
+                schema:
+                  type: string
+                  example: true
+          "404":
+            description: Not Found
+  /message/{messageId}:
+    get:
+      tags:
+        - Message
+      summary: Get Message Details by ID.
+      description: This API gets particular message specified by messageId and marks as
+        Read.
+      parameters:
+        - name: messageId
+          in: path
+          description: ID of message.
+          required: true
           schema:
-            $ref: '#/definitions/GroupPostOutputModel'
-definitions:
-  GroupModel:
-    type: object
-    properties:
-      GroupId:
-        type: string
-        description: Id of group.
-        example: 0f576c39-aa0b-437c-b1f0-befc362dd2cf
-      GroupName:
-        type: string
-        description: name of group.
-        example: Test
-  GroupGetModel:
-    type: object
-    properties:
-      Groups:
-        type: string
-        description: Id of group
-        example:
-          - ParentGroupID: null
-            DefaultJobsCount: 0
-            GroupName: New
-            GroupID: 0f576c39-aa0b-437c-b1f0-befc362dd2cf
-      TotalDevices:
-        type: string
-        description: total device in group
-        example: 1
-      TotalSubgroups:
-        type: string
-        description: total sub-groups
-        example: 0
-      Devices:
-        type: string
-        description: device in group
-        example: 1
-      Online:
-        type: string
-        description: device in group is online
-        example: 0
-      Offline:
-        type: string
-        description: device in group is offline
-        example: 1
-      TotalDevicesExcludingSubGroups:
-        type: string
-        description: total device excluding sub-groups
-        example: 0
-  GroupPostOutputModel:
-    type: object
-    properties:
-      GroupId:
-        type: string
-        description: Returns GroupId.
-        example: 8afc87ba-d797-4de4-85b0-8971db41a94d
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageIdModel"
+        "404":
+          description: Not Found
+  /customer:
+    get:
+      tags:
+        - Customer Details
+      summary: Customer Details
+      description: Get the details of all customers.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerOutputModel"
+        "404":
+          description: Not Found
+  /version:
+    get:
+      tags:
+        - API Details
+      summary: Get API version.
+      description: Get current SureMDM API version.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                example: 1.6   
+servers:
+  - url: http://suremdm.42gears.com/api
+  - url: https://suremdm.42gears.com/api
+
+
+
+# Components starts here
+components:
+  schemas:
+    CustomerOutputModel:
+      type: object
+      properties:
+        CustomerId:
+          type: string
+          description: Id of customer
+          example: 1
+        Name:
+          type: string
+          description: Name of the customer
+          example: customer name
+        DeviceCount:
+          type: string
+          description: Count of device
+          example: 5
+        Address:
+          type: string
+          description: Address of customer
+          example: ""
+        Email:
+          type: string
+          description: Email of customer
+          example: test@gmail.com
+        Phone1:
+          type: string
+          description: Phone number of customer
+          example: "1234567890"
+        Phone2:
+          type: string
+          description: Phone number of customer
+          example: "1234567890"
+        Fax:
+          type: string
+          description: Fax address of customer
+          example: +44 161 999 8888
+    MessageModel:
+      type: object
+      properties:
+        MessageId:
+          type: string
+          description: Id of message
+          example: 1
+        DeviceId:
+          type: string
+          description: Id of the device
+          example: 2ff21872-6e9f-43fe-a90e-3e9fe4203e8d
+        DeviceName:
+          type: string
+          description: name of device
+          example: Client0001
+        Subject:
+          type: string
+          description: subject of message
+          example: Re- Test Message
+        TimeStamp:
+          type: string
+          description: Timestamp of the message
+          example: 7/12/2018 7:07:15 AM
+        Status:
+          type: string
+          description: status of message
+          example: Unread
+        PlatformType:
+          type: string
+          description: Platform of device
+          example: Android
+    MessageIdModel:
+      type: object
+      properties:
+        Subject:
+          type: string
+          description: subject of message
+          example: test
+        Body:
+          type: string
+          description: body of the message
+          example: test
+        Date:
+          type: string
+          description: date of message
+          example: 12/07/2018
+        Time:
+          type: string
+          description: time of message
+          example: 07:07 AM
+        SentTimeOnDevice:
+          type: string
+          description: sent time on device of the message
+          example: 7/12/2018 7:07:15 AM
+        SentBy:
+          type: string
+          description: sent by customer
+          example: Client0003
+        DeviceID:
+          type: string
+          description: device id of device
+          example: 2ff21872-6e9f-43fe-a90e-3e9fe4203e8d
+        Status:
+          type: string
+          description: status of message
+          example: Read
+
+
+    Job:
+      type: object
+      required:
+        - DeviceID
+        - JobType
+      properties:
+        DeviceID:
+          type: string
+          description: ID of device.
+          example: ac4204f9-6f5e-4384-8c48-aa6919696199
+    RefreshDevice:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Refresh Device details.
+              example: Refresh_Device
+    GetDeviceApps:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Refresh Device app details.
+              example: GET_DEVICE_APPS
+    LockDevice:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Lock Device.
+              example: Lock
+    RebootDevice:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Reboot Device.
+              example: Reboot
+    Buzz:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Send BUZZ to Device.
+              example: REMOTE_BUZZ
+            PayLoad:
+              type: string
+              description: This dynamic job sends BUZZ to Device. 
+              example: |
+                {"Interval":"3"}      
+    ChangePin:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Change device lock pin.
+              example: CHANGE_PIN
+            PayLoad:
+              type: string
+              description: Job specific PayLoad. 
+              example: "1234"        
+    CallTracking:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Apply call tracking job on Device.
+              example: APPLY_CALL_TRACKING
+            PayLoad:
+              type: string
+              description: |
+                Job specific PayLoad.<br/><i style="color:red">encode in base64</i><br/>
+                {
+                  "isOn":"1",
+                  “periodicity":"15”
+                }
+              example: 
+                - ewogICAiaXNPbiI6IjEiLAogICDigJxwZXJpb2RpY2l0eSI6IjE14oCdCn0=  
+    SMSTracking:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Apply SMS tracking job on Device.
+              example: APPLY_CALL_TRACKING
+            PayLoad:
+              type: string
+              description: |
+                Job specific PayLoad.<br/><i style="color:red">encode in base64</i><br/>
+                {
+                  "isOn":"1",
+                  “periodicity":"15”
+                }
+              example: 
+                - ewogICAiaXNPbiI6IjEiLAogICDigJxwZXJpb2RpY2l0eSI6IjE14oCdCn0=          
+    Wipe:
+      allOf: 
+        - $ref: '#/components/schemas/Job'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: Wipe all data on Device.
+              example: WIPE
+
+# Job Assignment model
+    Immediate:
+      type: object
+      required:
+        - DeviceIds
+        - JobId
+      properties:
+        DeviceIds:
+          description: ID of device.
+          type: string
+          example: ac4204f9-6f5e-4384-8c48-aa6919696199
+        JobId:
+          description: Id of job.
+          type: string
+          example: eaa76725-ff02-4c45-8fca-4f6145d65d3f
+    Periodically:
+      allOf: 
+        - $ref: '#/components/schemas/Immediate'
+        - type: object
+          properties:
+            RecursiveScheduleTime:
+              description: |
+                Auto apply job on repeat after time specified in minutes.
+                <br/><b>Sample: </b>"12"
+              type: string
+              example: "12"
+    Days_Time:
+      allOf: 
+        - $ref: '#/components/schemas/Immediate'
+        - type: object
+          properties:
+            RecursiveScheduleTime:
+              description: |
+                Auto apply job on repeat on specified days at time specified.
+                <br/><b>Sample: </b>{"Time":"10:41","Days":["0","5","6"],"GMTTimeInterval":-330}
+                  - Time: Time to apply job.<br/>Time Format: <a style="color:red">HH:MM</a>
+                  - Days: Days which job will be applied.<br/>["sun","mon","tue","wed","thu","fri","sat"] = ["0","1","2","3","4","5","6"]
+              type: string
+              example: |
+                {"Time":"10:41","Days":["0","5","6"],"GMTTimeInterval":-330}
+    Date_Time:
+      allOf: 
+        - $ref: '#/components/schemas/Immediate'
+        - type: object
+          properties:
+            ServerScheduleTime:
+              description: |
+                Schedule date and time to apply job.<br/>
+                <b>Sample: </b>2019/4/10 5:11<br/>Input format: YYYY/MM/DD HH:MM
+              type: string
+              example: 2019/4/10 5:11
+
+
+  # Delete Device model
+    DeleteDevice:
+      type: object
+      required:
+        - DeviceId
+        - Action
+      properties:
+        DeviceId:
+          type: string
+          description: Id of device.
+          example: 22c245da-df91-4bd2-9ee9-75a9ccf61142
+        Action:
+          type: string
+          description: Action to be performed.
+          example: DELETE_DEVICE
+      example:
+        DeviceId: 22c245da-df91-4bd2-9ee9-75a9ccf61142
+        Action: DELETE_DEVICE
+
+    DataUsageOutput:
+      type: object
+      properties:
+        DeviceId:
+          type: string
+          description: Id of target device
+          example: 8a14faf3-a26b-4ffb-aa52-f60c792d452b
+        DeviceName:
+          type: string
+          description: Name of the device
+          example: c2
+        DeviceTotalWifiDataUsage:
+          type: string
+          description: Name of the job
+          example: Push Data Job 1
+        DeviceTotalMobileDataUsage:
+          type: string
+          description: Timestamp when the job is/was supposed to deploy
+          example: 2017-07-21T13:45:58Z
+        AppsDataUsage:
+          type: string
+          description: Data used by the app
+          example: "'AppId': 'com.android.vending', 'AppName': 'Google Play Store',
+            'AppIcon': 'iVBORwW8ufYoci', 'ForegroundMobileDataUsage': 0,
+            'BackgroundMobileDataUsage': 0, 'ForegroundWifiDataUsage': 0,
+            'BackgroundWifiDataUsage': 88882340"
+        DataUsage:
+          type: string
+          description: Timestamp when the job is/was supposed to deploy
+          example: "'DeviceId': 'e4177576-b8e4-4bfc-8728-62437ae43f53',
+            'MobileDataUsage': 0, 'WifiDataUsage': 1961989, 'StartTime':
+            '2017-08-17T14:20:18+05:30', 'EndTime': '2017-08-17T17:31:49+05:30',
+            'IsRoaming': '0'"
+        CurrentCycleStartDate:
+          type: string
+          description: Timestamp for start of Current cycle
+          example: 0001-01-01T00:00:00
+        CurrentCycleEndDate:
+          type: string
+          description: Timestamp for end of Current cycle
+          example: 0001-01-01T00:00:00
+        PrevCycleStartDate:
+          type: string
+          description: Timestamp for start of previous cycle"
+          example: 2017-07-21T13:45:58Z
+        PrevCycleEndDate:
+          type: string
+          description: Timestamp for end of previous cycle
+          example: 0001-01-01T00:00:00
+
+
+    DeviceLogOutput:
+      type: object
+      properties:
+        Time:
+          type: string
+          description: Time.
+          example: 2019-04-03T04:50:10.818Z
+        Message:
+          type: string
+          description: Detail.
+          example: '"New device(Client0017) registered."'
+        Type:
+          type: string
+          description: Log type.
+          example: System Log
+
+# Job deployment model
+    JobQueueDevice:
+      type: object
+      required:
+        - DeviceIds
+      properties:
+        DeviceIds:
+          type: string
+          description: Id(s) of selected devices separated by comma(,).
+          example: bd3a17c3-54aa-4ccb-afbc-5517054a2fc6
+        bShowAll:
+          type: boolean
+          description: |
+            Specifies which jobs to return.
+            <br/>true: pending and deployed jobs.
+            <br/>false: only pending jobs.
+          example: true
+        JobqueueStatus:
+          type: string
+          description: Job queue status
+          example: SHOWALL
+        AllDevicesSelected:
+          type: boolean
+          example: false
+          description: All devices are selected.
+      example:
+        DeviceIds: 8a14faf3-a26b-4ffb-aa52-f60c792d452b,edf13234-443c-46f0-9b67-c730eb9ce7e1
+        bShowAll: true
+        JobqueueStatus: SHOWALL
+        AllDevicesSelected: false
+
+
+    DynamicJobQueueDevice:
+      type: object
+      properties:
+        PayLoad:
+          type: string
+          description: ID of selecte device(s).
+          example: '["3167f5e3-4ac5-41c1-823c-714374edbdb4"]'
+
+  # Device Assignment mode
+    DeviceAssignment:
+      type: array
+      items:
+        type: object
+        required:
+          - DeviceId
+          - GroupId
+        properties:
+          DeviceId:
+            type: string
+            description: Id of the device
+            example: aa8b3b36-9684-42b6-996b-84c319df75ff
+          GroupId:
+            type: string
+            description: Id of Group
+            example: 1234f195-69a3-4f7d-9c94-957d27573987
+      example: [{"DeviceId": "aa8b3b36-9684-42b6-996b-84c319df75ff","GroupId": "1234f195-69a3-4f7d-9c94-957d27573987"}]
+
+
+    JobOutputModel:
+      type: object
+      properties:
+        JobID:
+          type: string
+          description: Id of job.
+          example: 7bb36bea-24a9-46d4-9b5e-4fe2cb01b181
+        JobFolderID:
+          type: string
+          description: Id of job folder.
+          example: "null"
+        JobName:
+          type: string
+          description: Name of job.
+          example: Test
+        Platform:
+          type: string
+          description: Platform of job.
+          example: android
+        Type:
+          type: string
+          description: type of job.
+          example: Install
+        Size:
+          type: string
+          description: size of job.
+          example: "1506"
+        LastModified:
+          type: string
+          description: LastModified of job.
+          example: 7/12/2018 7:06:19 AM
+        UsesRemoteStorageJobtable:
+          type: string
+          description: Uses Remote Storage Job table.
+          example: "0"
+
+# Group Models
+    GroupGetModel:
+      type: object
+      properties:
+        Groups:
+          type: array
+          items:
+            type: object
+            properties:
+              ParentGroupID:
+                type: string
+                description: ID of parent group
+                examples: null
+              DefaultJobsCount:
+                type: integer
+                description: ID of parent group
+                examples: 0
+              DeviceNameRule:
+                type: string
+                description: 
+                examples: null
+              GroupName:
+                type: string
+                description: Name of group
+                examples: group1
+              GroupID:
+                type: string
+                description: ID of group
+                examples: 5e1c484f-972f-4c06-8f84-aae0e7f7b9fe
+        TotalDevices:
+          type: integer
+          description: Total number of devices in group
+          example: 1
+        TotalSubgroups:
+          type: integer
+          description: total sub-groups
+          example: 0
+        Devices:
+          type: integer
+          description: Number of devices in current group
+          example: 1
+        Online:
+          type: integer
+          description: Number of online devices in current group
+          example: 0
+        Offline:
+          type: integer
+          description: Number of offline devices in current group
+          example: 1
+        TotalDevicesExcludingSubGroups:
+          type: integer
+          description: total number devices excluding sub-groups
+          example: 0
+    
+    GroupPostOutputModel:
+      type: object
+      properties:
+        GroupId:
+          type: string
+          description: Returns GroupId.
+          example: 8afc87ba-d797-4de4-85b0-8971db41a94d
+
+    GroupModel:
+      type: object
+      properties:
+        GroupName:
+          type: string
+          description: name of group.
+          example: Test
+
+
+# Delete job model
+    JobDeleteModel:
+      type: object
+      required:
+        - FolderId
+        - JobID
+      properties:
+        FolderId:
+          type: string
+          description: Id of job folder.
+        JobID:
+          type: string
+          description: Id of Job.
+          example: '["4b7198ec-a300-4f4c-a27e-e473c4b831cc"]'
+        JobType:
+          type: string
+          description: Type of job.
+          example: JOBS
+
+# Set Devicename model
+    SetDeviceName:
+      type: object
+      required:
+        - DeviceId
+        - DeviceName
+      properties:
+        DeviceId:
+          type: string
+          description: Id of the device
+          example: ac4204f9-6f5e-4384-8c48-aa6919696199
+        DeviceName:
+          type: string
+          description: Name of Device
+          example: Client002
+    DeviceModel:
+      type: object
+      properties:
+        DeviceID:
+          type: string
+          description: Id of message
+          example: 2ff21872-6e9f-43fe-a90e-3e9fe4203e8d
+        ConnectionStatus:
+          type: string
+          description: Id of the device
+          example: Online
+        GroupID:
+          type: string
+          description: name of device
+        DeviceIPAddress:
+          type: string
+          description: subject of message
+          example: 192.168.1.103
+        DeviceName:
+          type: string
+          description: Timestamp of the message
+          example: Client0003
+        UserID:
+          type: string
+          description: status of message
+          example: "null"
+        LastTimeStamp:
+          type: string
+          description: status of message
+          example: 7/12/2018 7:05:13 AM
+        DeviceModelName:
+          type: string
+          description: status of message
+          example: Lenovo TB-8504X
+        PlatformType:
+          type: string
+          description: status of message
+          example: Android
+        Operator:
+          type: string
+          description: status of message
+          example: Unknown
+        Battery:
+          type: string
+          description: status of message
+          example: "90"
+        PhoneSignal:
+          type: string
+          description: status of message
+          example: "0"
+        AgentVersion:
+          type: string
+          description: status of message
+          example: "12.29"
+        SureLockVersion:
+          type: string
+          description: status of message
+          example: "8.27"
+        SureFoxVersion:
+          type: string
+          description: status of message
+          example: "null"
+        SureVideoVersion:
+          type: string
+          description: status of message
+          example: "null"
+        DefaultHome:
+          type: string
+          description: status of message
+          example: com.lenovo.launcher
+        Notes:
+          type: string
+          description: status of message
+          example: "null"
+        IMEI:
+          type: string
+          description: status of message
+          example: "866991030279668"
+        IMSI:
+          type: string
+          description: status of message
+          example: Unknown
+        PhoneNumber:
+          type: string
+          description: status of message
+          example: Unknown
+        SerialNumber:
+          type: string
+          description: status of message
+          example: HGAFEZ0C
+        TrackingOn:
+          type: string
+          description: status of message
+          example: "0"
+        TrackingInterval:
+          type: string
+          description: status of message
+          example: "0"
+        CallLogTrackingOn:
+          type: string
+          description: status of message
+          example: "0"
+        CallLogTrackingInterval:
+          type: string
+          description: status of message
+          example: "1"
+        Protocol:
+          type: string
+          description: status of message
+          example: "0"
+        JobsFailed:
+          type: string
+          description: status of message
+          example: "null"
+        RootStatus:
+          type: string
+          description: status of message
+          example: "1"
+        MacAddress:
+          type: string
+          description: status of message
+          example: 2C:FD:AB:03:80:3B
+        SecurityPolicyPickedByDevice:
+          type: string
+          description: status of message
+          example: "null"
+
+# Create job model
+    JobCreateModel:
+      type: object
+      required:
+        - JobName
+        - FolderId
+        - JobType
+        - Platform
+        - PayLoad
+      properties:
+        JobName:
+          type: string
+          description: Name of job.
+          example: test
+        FolderId:
+          type: string
+          description: Id of job folder. (null for default folder)
+          example: f38f9258-62ce-4187-b8aa-9914e129f015
+    
+# File transferjob model
+    FileTransferJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/android'
+          Others: '#/components/schemas/OthersFileTransfer'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                File Transfer
+              example: File Transfer
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "AndroidVR", "androidwear",<br/>"windows_ce", "windows_mobile", "windows", "Linux"
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/FileTransferPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: File Transfer
+        Platform: android
+        MinimumVersion: "28"
+        VersionCompare: "2"
+        PayLoad:
+          - eyAgCgkiTG9jYWxQYXRoIjoidGVzdC50eHQiLAoJIkRldmljZVBhdGgiOiIvc2RjYXJkLyIsCgkiSW5zdGFsbCI6ZmFsc2UsCgkiVXNlQmFzaWNBdXRoZW50aWNhdGlvbiI6ZmFsc2UsCgkiSXNIdHRwVXJsIjpmYWxzZSwKCSJIdHRwVXNlck5hbWUiOiIiLAoJIkh0dHBQYXNzd29yZCI6IiIsCgkiSXNTaWxlbnQiOmZhbHNlLAoJIkV4ZWN1dGVQYXRoIjoiIiwKCSJDdXJyZW50VXNlciI6ZmFsc2UsCgkiSm9iTmFtZVhNTCI6InRlc3QudHh0IiwKCSJGcm9tQXBwU3RvcmUiOmZhbHNlCn0=
+    FileTransferPayLoad:
+      type: object
+      properties:
+        LocalPath:
+          type: string
+          description: |
+            Path of File/APP.<br/>
+            <b>Sample: </b>"example.txt"
+          example: example.txt
+        DevicePath:
+          type: string
+          description: |
+            Path where to store on device.<br/>
+            <b>Sample: </b>"/sdcard/"
+          example: /sdcard/
+        Install:
+          type: boolean
+          description: |
+            Install file after transfer.
+          example: false
+        IsHttpUrl:
+          type: boolean
+          description: Is local path is URL.
+          example: false
+        UseBasicAuthentication:
+          type: boolean
+          description: If path is http URL and it requires authentication.
+          example: false
+        HttpUserName:
+          type: string
+          description: Username for http authentication.
+          example: |
+            ""
+        HttpPassword:
+          type: string
+          description: Password for http authentication.
+          example: |
+            ""
+        IsSilent:
+          type: boolean
+          description: Perform job silently on device without notification.
+          example: false
+        ExecutePath:
+          type: string
+          description: ""
+          example: |
+            ""
+        CurrentUser:
+          type: boolean
+          description: ""
+          example: false
+        JobNameXML:
+          type: string
+          description: |
+            File/App name.<br/>
+            <b>Sample: </b>"example.txt"
+          example: example.txt
+        FromAppStore:
+          type: boolean
+          description: If file is from Appstore of sureMDM.
+          example: false
+    android:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/FileTransferJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersFileTransfer:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/FileTransferJob'
+
+
+# Installjob model
+    InstallJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidFileTransfer'
+          Others: '#/components/schemas/OthersInstall'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                Install
+              example: File Transfer
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "androidwear", "windows_ce",<br/>"windows_mobile", "windows"
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/InstallPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: Install
+        Platform: android
+        MinimumVersion: "28"
+        VersionCompare: "2"
+        PayLoad:
+          - eyJMb2NhbFBhdGgiOiJOb3RoaW5nX3YxLjYuMV9hcGtwdXJlLmNvbS5hcGsiLCJEZXZpY2VQYXRoIjoiL3NkY2FyZC8iLCJJbnN0YWxsIjp0cnVlLCJVc2VCYXNpY0F1dGhlbnRpY2F0aW9uIjpmYWxzZSwiSXNIdHRwVXJsIjpmYWxzZSwiSHR0cFVzZXJOYW1lIjoiIiwiSHR0cFBhc3N3b3JkIjoiIiwiSXNTaWxlbnQiOmZhbHNlLCJFeGVjdXRlUGF0aCI6IiIsIkN1cnJlbnRVc2VyIjpmYWxzZSwiSm9iTmFtZVhNTCI6Ik5vdGhpbmdfdjEuNi4xX2Fwa3B1cmUuY29tLmFwayIsIkZyb21BcHBTdG9yZSI6ZmFsc2V9
+    InstallPayLoad:
+      type: object
+      properties:
+        LocalPath:
+          type: string
+          description: |
+            Path of File/APP.<br/>
+            <b>Sample: </b>"example.apk"
+          example: example.txt
+        DevicePath:
+          type: string
+          description: |
+            Path where to store on device.<br/>
+            <b>Sample: </b>"/sdcard/"
+          example: /sdcard/
+        Install:
+          type: boolean
+          description: |
+            Install file after transfer.
+          example: false
+        IsHttpUrl:
+          type: boolean
+          description: Is local path is URL.
+          example: false
+        UseBasicAuthentication:
+          type: boolean
+          description: If path is http URL and it requires authentication.
+          example: false
+        HttpUserName:
+          type: string
+          description: Username for http authentication.
+          example: |
+            ""
+        HttpPassword:
+          type: string
+          description: Password for http authentication.
+          example: |
+            ""
+        IsSilent:
+          type: boolean
+          description: Perform job silently on device without notification.
+          example: false
+        ExecutePath:
+          type: string
+          description: ""
+          example: |
+            ""
+        CurrentUser:
+          type: boolean
+          description: ""
+          example: false
+        JobNameXML:
+          type: string
+          description: |
+            File/App name.<br/>
+            <b>Sample: </b>"example.apk"
+          example: example.txt
+        FromAppStore:
+          type: boolean
+          description: If file is from Appstore of sureMDM.
+          example: false
+    androidFileTransfer:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/InstallJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersInstall:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/InstallJob'
+
+# notification policy model
+    NotificationPolicyJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidNotificationPolicy'
+          Others: '#/components/schemas/OthersNotificationPolicy'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                Notification Policy
+
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "androidwear", "any"<br/>"windows_ce", "windows_mobile", "windows"
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/NotificationPolicyPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: notification_policy
+        Platform: android
+        PayLoad:
+          - eyJQb2xpY3lTZXR0aW5ncyI6eyJCYXR0ZXJ5UG9saWN5Ijp0cnVlLCJDb25uZWN0aW9uUG9saWN5Ijp0cnVlLCJEYXRhVXNhZ2UiOnRydWUsImluS2IiOmZhbHNlLCJpbk1iIjpmYWxzZSwiaW5HYiI6dHJ1ZSwiRGV2aWNlT25saW5lTm90aWZpY2F0aW9uIjp0cnVlLCJTSU1DaGFuZ2VOb3RpY2F0aW9uIjp0cnVlLCJQZXJtaXNzaW9uR3JhbnRlZE5vdGlmaWNhdGlvbiI6dHJ1ZSwiU3VyZU1ETUFsZXJ0Ijp0cnVlLCJEZXZpY2VBbGVydCI6dHJ1ZSwiRW1haWxBbGVydCI6dHJ1ZSwiU01TQWxlcnQiOnRydWUsIkVtYWlsQWRkcmVzc2VzIjoiYWJAYS5jb20gIiwiUGhvbmVOdW1iZXIiOiIrOTExMjM0NTY3ODkwIiwiQmF0dGVyeVBlcmNlbnRhZ2UiOjEwLCJDb25uZWN0aW9uVGltZSI6IjEiLCJEYXRhVXNhZ2VRdWFudGl0eSI6MSwiUGx1Z2luQWxlcnQiOmZhbHNlLCJVblBsdWdnZWRBbGVydCI6ZmFsc2UsIkRpc2FibGVOb3RpZmljYXRpb25Qb2xpY3kiOmZhbHNlfX0=
+    NotificationPolicyPayLoad:
+      type: object
+      properties:
+        PolicySettings:
+          type: object
+          properties:
+            BatteryPolicy:
+              type: boolean
+              description: Battery policy status.(Notifies when battery is less than
+                value set in BatteryPercentage)
+              example: true
+            ConnectionPolicy:
+              type: boolean
+              description: Connection policy status.(Notifies when battery is less than
+                value set in BatteryPercentage)
+              example: true
+            DataUsage:
+              type: boolean
+              description: Data-Usage policy status.(Notifies when data usage is above
+                specified in DataUsageQuantity)
+              example: true
+            inKb:
+              type: boolean
+              description: true if data usage limit is in KB.
+              example: false
+            inMb:
+              type: boolean
+              description: true if data usage limit is in MB.
+              example: false
+            inGb:
+              type: boolean
+              description: true if data usage limit is in GB.
+              example: true
+            DeviceOnlineNotification:
+              type: boolean
+              description: Get notification when device comes online.
+              example: true
+            SIMChangeNotication:
+              type: boolean
+              description: Get notification when SIM is changed on device.
+              example: true
+            PermissionGrantedNotification:
+              type: boolean
+              description: Is device Rooted.
+              example: false
+            SureMDMAlert:
+              type: boolean
+              description: Get notifications on sureMDM console.
+              example: true
+            DeviceAlert:
+              type: boolean
+              description: Get notifications on device.
+              example: true
+            EmailAlert:
+              type: boolean
+              description: Get notifications via Email.
+              example: true
+            SMSAlert:
+              type: boolean
+              description: Get notifications via SMS.
+              example: true
+            EmailAddresses:
+              type: string
+              description: Email address. (required if EmailAlert is set true)
+            PhoneNumber:
+              type: string
+              description: Phone number. (required if SMSAlert is set true)
+            BatteryPercentage:
+              type: integer
+              description: Battery percentage.
+              example: 78
+            ConnectionTime:
+              type: string
+              description: Device offline time limit. (in minute)
+              example: 10
+            DataUsageQuantity:
+              type: integer
+              description: Data-Usage limit.
+              example: 3
+            PluginAlert:
+              type: boolean
+              description: Is device plugged in to charging.
+              example: true
+            UnPluggedAlert:
+              type: boolean
+              description: Is device unplugged from charging.
+              example: false
+            DisableNotificationPolicy:
+              type: boolean
+              description: Desable notification policy.
+              example: false
+    androidNotificationPolicy:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/NotificationPolicyJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersNotificationPolicy:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/NotificationPolicyJob'
+
+# Wifi Configuration job
+    WiFiConfigJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidWiFiConfig'
+          Others: '#/components/schemas/OthersWiFiConfig'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                Wi-fi Configuration Settings
+
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "androidwear", "AndroidVR"<br/>
+                <i style="color:red;">Note: </i>Hotspot setting is supported for android only.
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/WiFiConfigPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: wifi configuration settings
+        Platform: android
+        PayLoad:
+          - eyJTU0lEIjoidGVzdCIsIlNlY3VyaXR5VHlwZSI6MSwiUGFzc3dvcmQiOiIxMjM0NTY3OCIsIkF1dG9Db25uZWN0IjpmYWxzZSwiUG9ydGFibGVIb3RzcG90Ijp0cnVlLCJIaWRkZW5OZXR3b3JrIjpmYWxzZX0=
+    WiFiConfigPayLoad:
+      type: object
+      properties:
+        SSID:
+          type: string
+          description: Wi-Fi / Hotspot name.
+          example: true
+        SecurityType:
+          type: integer
+          description: |
+            Type of security.(for Hostspot)
+            0: Open
+            1: WEP
+            2: WPA/WPA2 PSK
+          example: 1
+        Password:
+          type: string
+          description: |
+            Password of Wi-Fi to connect / Passwors of hotspot to be created.
+          example: 12345678
+        AutoConnect:
+          type: boolean
+          description: Enable auto connect for Wi-Fi settings.
+          example: false
+        PortableHotspot:
+          type: boolean
+          description: For creating Hotspot.
+          example: true
+        HiddenNetwork:
+          type: boolean
+          description: Make hotspot network hidden.
+          example: true
+    androidWiFiConfig:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/WiFiConfigJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersWiFiConfig:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/WiFiConfigJob'
+
+# Device Migration model
+    DeviceMigrationJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidDeviceMigration'
+          Others: '#/components/schemas/OthersDeviceMigration'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                Device Migration between Groups.
+
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/DeviceMigrationPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: move_device
+        Platform: android
+        PayLoad:
+          - eyJTZWxlY3RlZEdycElkIjoiNWUxYzQ4NGYtOTcyZi00YzA2LThmODQtYWFlMGU3ZjdiOWZlIn0=
+    DeviceMigrationPayLoad:
+      type: object
+      properties:
+        SelectedGrpId:
+          type: string
+          description: ID of selected group.
+          example: 9dd587ed-25d9-48ea-b57c-d664c941971c
+    androidDeviceMigration:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/DeviceMigrationJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersDeviceMigration:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/DeviceMigrationJob'
+
+# SMS Tracking Model
+    SMSTrackingJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidSMSTracking'
+          Others: '#/components/schemas/OthersSMSTracking'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                SMS Tracking job
+
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "androidwear"
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/SMSTrackingPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: SMS_TRACKING
+        Platform: android
+        PayLoad:
+          - eyJDYWxsVHJhY2tpbmciOiIxIiwiUGVyaW9kaWNpdHkiOiIxNSJ9
+    SMSTrackingPayLoad:
+      type: object
+      properties:
+        SMSTracking:
+          type: string
+          description: |
+            SMS log tracking status.<br/>
+            "0": Enable<br/>
+            "1": Desable<br/>
+          example: "1"
+        Periodicity:
+          type: string
+          description: Periodicity of tracking in minutes.<br/>(if SMS tracking is enabled).
+          example: 15
+    androidSMSTracking:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/SMSTrackingJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersSMSTracking:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/SMSTrackingJob'
+
+
+# Call tracking model
+    CallTrackingJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidCallTracking'
+          Others: '#/components/schemas/OthersCallTracking'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                Call Tracking job
+
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "androidwear"
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/CallTrackingPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: CALL_TRACKING
+        Platform: android
+        PayLoad:
+          - eyJDYWxsVHJhY2tpbmciOiIxIiwiUGVyaW9kaWNpdHkiOiIxNSJ9
+    CallTrackingPayLoad:
+      type: object
+      properties:
+        CallTracking:
+          type: string
+          description: |
+            Call log tracking status.<br/>
+            "0": Enable<br/>
+            "1": Desable<br/>
+          example: "1"
+        Periodicity:
+          type: string
+          description: Periodicity of tracking in minutes.<br/>(if Call tracking is enabled).
+          example: 15
+    androidCallTracking:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/CallTrackingJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersCallTracking:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/CallTrackingJob'
+
+# App Settings model
+    AppSettingsJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidAppSettings'
+          Others: '#/components/schemas/OthersAppSettings'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                App Settings job
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "Linux"
+            PayLoad:
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/AppSettingsPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: NEW_APP_SETTINGS
+        Platform: android
+        PayLoad:
+          - eyJBcHBOYW1lIjpbIkFsZXhhIl0sIlBhY2thZ2VzIjpbImNvbS5hbWF6b24uZGVlLmFwcCJdLCJTdGFydFVwRGVsYXkiOlsiMTIiXSwiQWN0aW9uIjoiQ2xlYXJEYXRhIiwiUGhvbmVQaW4iOiIwMDAwIn0=
+    AppSettingsPayLoad:
+      type: object
+      properties:
+        AppName:
+          type: array
+          description: |
+            Name of App(s).
+          items:
+            type: string
+            description: ""
+          example:
+            - Alexa
+            - Amaze
+        Packages:
+          type: array
+          description: |
+            Name of app package(s).
+          items:
+            type: string
+            description: ""
+          example:
+            - com.amazon.dee.app
+            - com.amaze.filemanager
+        StartUpDelay:
+          type: string
+          description: App startup delay in sec.
+          items:
+            type: string
+            description: ""
+          example:
+            - "12"
+        Action:
+          type: string
+          description: |
+            Action to be performed.
+            - LockApps
+            - RunAtStartup
+            - Uninstall
+            - ClearData
+            - VisibleList
+            - InvisibleList
+            <i style=\"color:red;\">Note: </i>For Linux platform only Uninstall is supported.
+          example: 15
+        PhonePin:
+          type: string
+          description: Device Lock pin.
+          example: 1234
+    androidAppSettings:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/AppSettingsJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersAppSettings:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/AppSettingsJob'
+
+# Remote Wipe Job
+    RemoteWipeJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidRemoteWipe'
+          Others: '#/components/schemas/OthersRemoteWipe'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                Remote Data Wipe job
+
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "any", "windows_ce",<br/> "windows_mobile",
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/RemoteWipePayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: Wipe
+        Platform: android
+        PayLoad:
+          - eyJXaXBlQWxsRGF0YSI6dHJ1ZSwiSXNTY2hlZHVsZVdpcGUiOnRydWUsIkdyYWNlUGVyaW9kIjoiNCIsIklzV2lwZU9uUm9vdCI6ZmFsc2V9
+    RemoteWipePayLoad:
+      type: object
+      properties:
+        WipeAllData:
+          type: boolean
+          description: Wipe out all data from device
+          example: true
+        IsScheduleWipe:
+          type: boolean
+          description: Set wipe out data from device at regular intervals.
+          example: false
+        GracePeriod:
+          type: integer
+          description: Time Period interval to wipe out data (In Hours).
+          example: false
+        IsWipeOnRoot:
+          type: integer
+          description: Wipe Data even if device is rooted. By default it is false
+          example: false
+    androidRemoteWipe:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/RemoteWipeJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =   MinimumVersion<br/>
+              example: |
+                "2"
+    OthersRemoteWipe:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/RemoteWipeJob'
+
+# Location Tracking Job
+    LocationTrackingJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidLocationTracking'
+          Others: '#/components/schemas/OthersLocationTracking'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                Location Tracking job
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "androidwear"
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/LocationTrackingPayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: location
+        Platform: android
+        PayLoad:
+          - eyJMb2NhdGlvblRyYWNraW5nIjp0cnVlLCJQZXJpb2RpY2l0eSI6NH0=
+    LocationTrackingPayLoad:
+      type: object
+      properties:
+        LocationTracking:
+          type: boolean
+          description: Location tracking status.
+          example: true
+        Periodicity:
+          type: integer
+          description: Periodicity of tracking in minutes.(if Location tracking is enabled).
+          example: 5
+    androidLocationTracking:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/LocationTrackingJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersLocationTracking:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/LocationTrackingJob'
+
+# Text Message
+    TextMessageJob:
+      discriminator:
+        propertyName: Platform
+        mapping:
+          android: '#/components/schemas/androidTextMessage'
+          Others: '#/components/schemas/OthersTextMessage'
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - type: object
+          properties:
+            JobType:
+              type: string
+              description: |
+                Send Text Message
+            Platform:
+              type: string
+              description: |
+                Name of platform.<br/>
+                <b>Platform Supported: </b>"android", "androidwear", "Linux"<br/>"windows_ce", "windows_mobile", "windows"
+            PayLoad:
+              
+              description: >
+                Job specific payload<br/>
+                Note: 
+                  - PayLoad should be converted in [Base64](https://en.wikipedia.org/wiki/Base64).
+              allOf:
+                - $ref: '#/components/schemas/TextMessagePayLoad'
+      example:
+        FolderId: 
+        JobName: test job
+        JobType: text_message
+        Platform: android
+        PayLoad:
+          - eyJTdWJqZWN0IjoiR3JlZXRpbmdzICEiLCJCb2R5IjoiSGFwcHkgQmlydGhkYXkhIiwiUmVhZE5vdGlmaWNhdGlvbiI6ZmFsc2UsIkZvcmNlUmVhZCI6dHJ1ZSwiRW5hYmxlQnV6eiI6dHJ1ZSwiQnV6ekludGVydmFsIjoiMTIiLCJDbG9zZUR1cmF0aW9uRW5hYmxlIjp0cnVlLCJJbnRlcnZhbCI6IjEyIiwiUmljaFRleHRCb2R5IjoiIiwiUmljaFRleHRIdG1sIjoiIn0=
+    TextMessagePayLoad:
+      type: object
+      properties:
+        Subject:
+          type: string
+          description: Subject of the Message which provides an overview to recepient about
+            what message contains.
+          example: Urgent Attention
+        Body:
+          type: string
+          description: Detailed Message.
+          example: Report to office at 12 noon
+        Read Notification:
+          type: boolean
+          description: It notifies the user by sending notification
+          example: true
+        ForceRead:
+          type: boolean
+          description: It pop-ups the user with the message and forces to read the message
+            sent by administrator.
+          example: false
+        EnableBuzz:
+          type: boolean
+          description: Send buzz with message.
+          example: false
+        BuzzInterval:
+          type: string
+          description: Buzz interval.(in sec)
+          example: "12"
+        CloseDurationEnable:
+          type: boolean
+          description: Enable close message pop-up.
+          example: false
+        Interval:
+          type: string
+          description: Close message pop-up after certain time specified.(in sec)
+          example: false
+        RichTextBody:
+          type: string
+          description: It is body for Rich Text Message which supports formatting such as
+            fonts, colors and text sizes.
+          example: ""
+        RichTextHTML:
+          type: string
+          description: It is similar to RichTextBody but this is mainly used for HTML
+            webpages. But for editor file it behaves like PlainText.
+          example: ""
+    androidTextMessage:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/TextMessageJob'
+        - type: object
+          properties:
+            MinimumVersion:
+              type: string
+              description: >
+                Android [API level](https://source.android.com/setup/start/build-numbers).<br>("0" to allow any)
+              example: |
+                "28"
+            VersionCompare:
+              type: string
+              description: >
+                Way of version comparison.<br/>
+
+                0: >= MinimumVersion<br/>
+
+                1: <= MinimumVersion<br/>
+
+                2: =  MinimumVersion<br/>
+              example: |
+                "2"
+    OthersTextMessage:
+      allOf: 
+        - $ref: '#/components/schemas/JobCreateModel'
+        - $ref: '#/components/schemas/TextMessageJob'
